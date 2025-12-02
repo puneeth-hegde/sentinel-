@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project Specific
+face_database.pkl
+logs/
+snapshots/
+dataset/*
+!dataset/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# YOLO weights (downloaded automatically)
+yolov8*.pt
+
+# InsightFace models (downloaded automatically)
+.insightface/

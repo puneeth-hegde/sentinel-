@@ -1,0 +1,233 @@
+# ═══════════════════════════════════════════════════════════════
+# SENTINEL v5.0 - COMPLETE SYSTEM CONFIGURATION
+# ═══════════════════════════════════════════════════════════════
+
+system:
+  version: "5.0.0"
+  name: "SENTINEL"
+  debug: false
+  log_level: "INFO"
+  log_dir: "logs"
+  snapshot_dir: "snapshots"
+
+# Camera Configuration
+cameras:
+  gate:
+    url: "rtsp://Gate_Camera:CREAKmyPASSWORD1219!!!@192.168.0.115:554/stream1"
+    name: "Gate Camera"
+    type: "gate"
+    enabled: true
+    reconnect_attempts: 5
+    reconnect_delay: 2
+    
+  door:
+    url: "rtsp://Door_Camera:CREAKmyPASSWORD1219!!!@192.168.0.120:554/stream1"
+    name: "Door Camera"
+    type: "door"
+    enabled: true
+    reconnect_attempts: 5
+    reconnect_delay: 2
+
+# Detection Settings
+detection:
+  model: "yolov8n.pt"
+  confidence: 0.70              # HIGH to avoid false alarms
+  device: "cuda"
+  classes: [0]                  # Person only
+  imgsz: 640
+  
+  # Bounding box filters (CRITICAL for no false alarms)
+  min_bbox_height:
+    gate: 150                   # Filter small detections at gate
+    door: 120                   # Allow closer persons at door
+  
+  min_bbox_width:
+    gate: 60
+    door: 50
+  
+  # Tracking
+  tracker: "bytetrack"
+  track_thresh: 0.5
+  match_thresh: 0.8
+  track_buffer: 30
+
+# Face Recognition
+face:
+  model: "buffalo_l"
+  threshold: 0.35               # Distance threshold
+  database: "face_database.pkl"
+  
+  # Performance settings
+  throttle_seconds: 2.0         # Max 1 recognition per 2 seconds per person
+  timeout_seconds: 10.0         # Give up after 10 seconds
+  max_parallel: 2               # Process 2 faces simultaneously
+  
+  # Quality filters
+  min_face_size: 80
+  min_brightness: 50
+  max_brightness: 230
+  min_blur_score: 100
+  
+  # Confirmation settings
+  matches_required: 2           # Need 2 matches to confirm
+  max_unknown_frames: 30        # After 30 frames, mark as unknown
+
+# Cross-Camera Tracking
+tracking:
+  enabled: true
+  time_window: 15               # Gate to door: 5-15 seconds expected
+  max_time_gap: 20              # Max 20 seconds between cameras
+  appearance_weight: 0.7        # 70% appearance, 30% spatial
+  distance_threshold: 0.5       # Similarity threshold
+
+# Pose Estimation
+pose:
+  enabled: true
+  fps_limit: 2                  # Only run at 2 FPS (enough for body language)
+  confidence: 0.5
+  camera: "gate"                # Only on gate camera
+  
+  # Threat detection
+  hands_raised_threshold: 0.6
+  aggressive_threshold: 0.7
+
+# Audio System
+audio:
+  enabled: true
+  engine: "pyttsx3"
+  rate: 150
+  volume: 0.9
+  
+  # Messages
+  messages:
+    welcome: "Welcome home, {name}."
+    unknown: "Hello, I don't recognize you. Please state your name."
+    face_hidden: "Please show your face to the camera."
+    loitering: "You have been at the gate for {duration} seconds. Please state your purpose."
+    threat_detected: "Warning! Suspicious behavior detected."
+    weapon_detected: "Warning! Weapon detected! Authorities have been notified."
+    break_in_attempt: "Critical alert! Break-in attempt detected! Person disappeared from gate without entry! Checking perimeter!"
+    critical_threat: "Security threat detected! Multiple suspicious persons at gate! Authorities notified!"
+    group_detected: "Alert! Multiple persons detected at gate. Security monitoring in progress."
+    rapid_movement: "Alert! Rapid movement detected. Monitoring closely."
+  
+  # Cooldowns (seconds) - prevent spam
+  cooldowns:
+    welcome: 120                # 2 minutes between welcomes
+    unknown: 120                # 2 minutes between unknown alerts
+    face_hidden: 60             # 1 minute between face hidden requests
+    loitering: 30               # 30 seconds between loitering alerts
+    threat: 60
+    weapon: 300                 # 5 minutes (serious alert)
+
+# Alert Rules
+alerts:
+  # Face hidden detection
+  face_hidden:
+    enabled: true
+    duration: 20                # Alert after 20 seconds
+    camera: "door"
+    
+  # Loitering detection
+  loitering:
+    enabled: true
+    duration: 40                # Alert after 40 seconds at gate
+    camera: "gate"
+    
+  # Unknown person
+  unknown_person:
+    enabled: true
+    frames_threshold: 15        # After 15 frames, trigger alert
+    
+  # Weapon detection
+  weapon:
+    enabled: true              # Disable by default (can enable if needed)
+    classes: [43, 44]           # Knife, gun in COCO dataset
+
+# Performance
+performance:
+  target_fps: 15
+  
+  # Frame processing
+  process_width: 640
+  process_height: 360
+  
+  # Display
+  display_width: 1280
+  display_height: 720
+  display_fps: 30
+  
+  # Queue management
+  max_queue_size: 10            # Drop old frames if queue full
+  frame_skip: 1                 # Process every Nth frame (1 = all frames)
+  
+  # GPU optimization
+  gpu_batch_size: 1
+  num_workers: 2
+
+# Authorized Users
+users:
+  authorized:
+    - puneeth
+  
+  # Enrollment settings
+  enrollment:
+    enabled: true
+    min_images: 5
+    max_images: 10
+    quality_threshold: 0.6
+
+# ZeroMQ Communication
+zmq:
+  base_port: 5555
+  hwm: 1000                     # High water mark
+  
+  ports:
+    gate_frames: 5555
+    door_frames: 5556
+    gate_detections: 5557
+    door_detections: 5558
+    face_jobs: 5559
+    face_results: 5560
+    pose_jobs: 5561
+    pose_results: 5562
+    audio_queue: 5563
+    alerts: 5564
+
+# Health Monitoring
+health:
+  check_interval: 5             # Check every 5 seconds
+  restart_attempts: 3
+  restart_delay: 2
+  
+  # Component timeouts
+  timeouts:
+    camera: 10
+    detection: 5
+    face: 15
+    audio: 5
+
+# Snapshot Management
+snapshots:
+  enabled: true
+  quality: 90
+  
+  # What to save
+  save_on:
+    - unknown_person
+    - loitering
+    - face_hidden
+    - threat_detected
+    - weapon_detected
+  
+  # Organization
+  organize_by_date: true
+  max_snapshots_per_day: 1000
+
+# Development/Testing
+dev:
+  mock_cameras: false           # Use video files instead of RTSP
+  mock_face_db: false           # Skip face recognition
+  show_fps: true
+  show_status: true
+  save_video: false
