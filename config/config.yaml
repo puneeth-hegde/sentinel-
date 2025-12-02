@@ -54,11 +54,11 @@ detection:
 # Face Recognition
 face:
   model: "buffalo_l"
-  threshold: 0.35               # Distance threshold
+  threshold: 0.50               # Increased for better angle tolerance (was 0.35)
   database: "face_database.pkl"
   
   # Performance settings
-  throttle_seconds: 2.0         # Max 1 recognition per 2 seconds per person
+  throttle_seconds: 1.0         # Faster response (was 2.0)
   timeout_seconds: 10.0         # Give up after 10 seconds
   max_parallel: 2               # Process 2 faces simultaneously
   
@@ -71,6 +71,9 @@ face:
   # Confirmation settings
   matches_required: 2           # Need 2 matches to confirm
   max_unknown_frames: 30        # After 30 frames, mark as unknown
+  
+  # Session persistence (CRITICAL FIX)
+  persistence_timeout: 30       # Lock identity for 30 seconds
 
 # Cross-Camera Tracking
 tracking:
@@ -125,13 +128,13 @@ alerts:
   # Face hidden detection
   face_hidden:
     enabled: true
-    duration: 20                # Alert after 20 seconds
+    duration: 10                # Alert after 20 seconds
     camera: "door"
     
   # Loitering detection
   loitering:
     enabled: true
-    duration: 40                # Alert after 40 seconds at gate
+    duration: 30                # Alert after 40 seconds at gate
     camera: "gate"
     
   # Unknown person
@@ -141,7 +144,7 @@ alerts:
     
   # Weapon detection
   weapon:
-    enabled: true              # Disable by default (can enable if needed)
+    enabled: true             # Disable by default (can enable if needed)
     classes: [43, 44]           # Knife, gun in COCO dataset
 
 # Performance
