@@ -54,7 +54,8 @@ detection:
 # Face Recognition
 face:
   model: "buffalo_l"
-  threshold: 0.50               # Increased for better angle tolerance (was 0.35)
+  # === FIX: Increased from 0.50 to 0.80 to accept your match score of 0.731 ===
+  threshold: 0.80
   database: "face_database.pkl"
   
   # Performance settings
@@ -140,7 +141,7 @@ alerts:
   # Unknown person
   unknown_person:
     enabled: true
-    frames_threshold: 15        # After 15 frames, trigger alert
+    frames_threshold: 20        # After 15 frames, trigger alert
     
   # Weapon detection
   weapon:

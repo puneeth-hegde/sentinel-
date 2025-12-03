@@ -8,7 +8,6 @@ import numpy as np
 from typing import Dict, List, Set
 from logger import get_logger
 
-
 class SecurityThreatAnalyzer:
     """
     Advanced threat detection for break-in scenarios
@@ -28,9 +27,12 @@ class SecurityThreatAnalyzer:
         self.active_threats = {}  # track_id -> threat_info
         self.disappeared_persons = {}  # track_id -> disappearance_info
         
+        # Reference to tracker (Added for Fix)
+        self.tracker = None
+        
         # Thresholds
         self.suspicious_time = 15  # Seconds at gate before suspicious
-        self.disappear_threshold = 5  # Seconds without detection = disappeared
+        self.disappear_threshold = 8  # INCREASED: 5s -> 8s to allow walking time
         self.rapid_movement_threshold = 2.0  # Meters per second
         self.group_size_alert = 3  # Alert if 3+ people at gate
         
@@ -38,6 +40,11 @@ class SecurityThreatAnalyzer:
         self.entry_timeout = 30  # If person doesn't enter door within 30s after gate = suspicious
         
         self.logger.success("Security Threat Analyzer initialized")
+
+    def set_tracker(self, tracker):
+        """Link the cross-camera tracker to check for matches"""
+        self.tracker = tracker
+        self.logger.info("Threat Analyzer linked to Cross-Camera Tracker")
     
     def update_gate_person(self, track_id: int, detection: Dict):
         """Update person state at gate camera"""
@@ -130,6 +137,13 @@ class SecurityThreatAnalyzer:
                 time_since_seen = current_time - state['last_seen']
                 
                 if time_since_seen > self.disappear_threshold:
+                    
+                    # === FIX: DOUBLE CHECK WITH TRACKER BEFORE ALERTING ===
+                    if self.tracker and self.tracker.is_matched('gate', track_id):
+                        self.mark_entered_door(track_id)
+                        continue
+                    # ======================================================
+
                     # Person disappeared
                     state['disappeared'] = True
                     
@@ -141,8 +155,9 @@ class SecurityThreatAnalyzer:
     def mark_entered_door(self, gate_track_id: int):
         """Mark that person entered through door (legitimate entry)"""
         if gate_track_id in self.gate_persons:
-            self.gate_persons[gate_track_id]['entered_door'] = True
-            self.logger.info(f"Track {gate_track_id} entered door (legitimate)")
+            if not self.gate_persons[gate_track_id]['entered_door']:
+                self.gate_persons[gate_track_id]['entered_door'] = True
+                self.logger.success(f"Track {gate_track_id} confirmed entered door (Threat Cancelled)")
             
             # Cancel threat if person entered legitimately
             if gate_track_id in self.active_threats:
@@ -190,7 +205,7 @@ class SecurityThreatAnalyzer:
         behavior_str = ', '.join(behaviors)
         
         self.logger.critical("=" * 80)
-        self.logger.critical(f"🚨 SECURITY THREAT DETECTED - Track {track_id}")
+        self.logger.critical(f"圷 SECURITY THREAT DETECTED - Track {track_id}")
         self.logger.critical(f"   Level: {threat_level.upper()}")
         self.logger.critical(f"   Behaviors: {behavior_str}")
         self.logger.critical("=" * 80)
@@ -218,7 +233,7 @@ class SecurityThreatAnalyzer:
         behavior_str = ', '.join(behaviors) if behaviors else 'normal approach'
         
         self.logger.critical("=" * 80)
-        self.logger.critical(f"🚨 BREAK-IN ATTEMPT DETECTED!")
+        self.logger.critical(f"圷 BREAK-IN ATTEMPT DETECTED!")
         self.logger.critical(f"   Track {track_id} disappeared without door entry")
         self.logger.critical(f"   Time at gate: {time_at_gate:.1f}s")
         self.logger.critical(f"   Behaviors: {behavior_str}")
@@ -243,10 +258,10 @@ class SecurityThreatAnalyzer:
         
         self._last_group_alert = current_time
         
-        self.logger.warning(f"👥 GROUP AT GATE: {total_count} persons ({suspicious_count} suspicious)")
+        self.logger.warning(f"則 GROUP AT GATE: {total_count} persons ({suspicious_count} suspicious)")
         
         if total_count >= 5:
-            self.logger.critical("🚨 LARGE GROUP DETECTED - Potential coordinated break-in")
+            self.logger.critical("圷 LARGE GROUP DETECTED - Potential coordinated break-in")
             self.audio.play_critical_threat()
     
     def _calculate_movement_variance(self, bbox_history: List) -> float:

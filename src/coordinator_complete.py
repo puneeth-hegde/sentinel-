@@ -139,6 +139,11 @@ class SentinelCoordinator:
         self.logger.info("→ Security Threat Analyzer...")
         self.threat_analyzer = SecurityThreatAnalyzer(self.config, self.audio, self.metrics)
         
+        # === CRITICAL FIX: LINK TRACKER TO ANALYZER ===
+        # This prevents the "Break-in" false alarm when moving between cameras
+        self.threat_analyzer.set_tracker(self.cross_tracker)
+        # ==============================================
+
         # 10. User Enrollment
         self.logger.info("→ User Enrollment System...")
         self.enrollment = UserEnrollmentSystem(

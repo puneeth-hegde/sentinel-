@@ -212,10 +212,17 @@ class FaceRecognitionSystem:
             cache['confirmed_name'] = name
             cache['confirmed_distance'] = distance
             
-            self.logger.success(
-                f"Track {track_id} confirmed as '{name}' "
-                f"(distance: {distance:.3f}, matches: {cache['match_count'][name]})"
-            )
+            # === LOGGING FIX: Distinguish between known and unknown ===
+            if name == "Unknown":
+                self.logger.warning(
+                    f"Track {track_id} confirmed as 'Unknown' (No match found) "
+                    f"(distance: {distance:.3f})"
+                )
+            else:
+                self.logger.success(
+                    f"Track {track_id} confirmed as '{name}' "
+                    f"(distance: {distance:.3f}, matches: {cache['match_count'][name]})"
+                )
         
         # Update last recognition time
         self.last_recognition_time[track_id] = time.time()
