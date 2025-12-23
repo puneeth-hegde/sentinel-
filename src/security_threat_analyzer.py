@@ -30,9 +30,9 @@ class SecurityThreatAnalyzer:
         # Reference to tracker (Added for Fix)
         self.tracker = None
         
-        # Thresholds
-        self.suspicious_time = 15  # Seconds at gate before suspicious
-        self.disappear_threshold = 8  # INCREASED: 5s -> 8s to allow walking time
+        # Thresholds (OPTIMIZED FOR STABLE OPERATION)
+        self.suspicious_time = 25  # INCREASED: 15s -> 25s (reduce false alarms)
+        self.disappear_threshold = 8  # 8 seconds - person must enter door within 8s
         self.rapid_movement_threshold = 2.0  # Meters per second
         self.group_size_alert = 3  # Alert if 3+ people at gate
         
@@ -109,7 +109,7 @@ class SecurityThreatAnalyzer:
             
             if speed > self.rapid_movement_threshold:
                 behaviors.add('rapid_approach')
-                threat_level = max(threat_level, 'medium', key=self._threat_priority)
+                threat_level = max(threat_level, 'low', key=self._threat_priority)
         
         # 4. PACING (moving back and forth)
         if len(state['bbox_history']) >= 20:
@@ -137,6 +137,13 @@ class SecurityThreatAnalyzer:
                 time_since_seen = current_time - state['last_seen']
                 
                 if time_since_seen > self.disappear_threshold:
+                    
+                    # === CRITICAL FIX: Skip tracking glitches ===
+                    time_at_gate = state['last_seen'] - state['first_seen']
+                    if time_at_gate < 2.0:
+                        # Person was barely visible - likely tracking glitch
+                        continue
+                    # ===========================================
                     
                     # === FIX: DOUBLE CHECK WITH TRACKER BEFORE ALERTING ===
                     if self.tracker and self.tracker.is_matched('gate', track_id):

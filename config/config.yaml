@@ -13,7 +13,7 @@ system:
 # Camera Configuration
 cameras:
   gate:
-    url: "rtsp://Gate_Camera:CREAKmyPASSWORD1219!!!@192.168.0.115:554/stream1"
+    url: "rtsp://Gate_Camera:CREAKmyPASSWORD1219!!!@192.168.1.9:554/stream1"
     name: "Gate Camera"
     type: "gate"
     enabled: true
@@ -21,7 +21,7 @@ cameras:
     reconnect_delay: 2
     
   door:
-    url: "rtsp://Door_Camera:CREAKmyPASSWORD1219!!!@192.168.0.120:554/stream1"
+    url: "rtsp://Door_Camera:CREAKmyPASSWORD1219!!!@192.168.1.6:554/stream1"
     name: "Door Camera"
     type: "door"
     enabled: true
@@ -31,7 +31,7 @@ cameras:
 # Detection Settings
 detection:
   model: "yolov8n.pt"
-  confidence: 0.70              # HIGH to avoid false alarms
+  confidence: 0.75              # INCREASED: 0.70 -> 0.75 (reduce false detections)
   device: "cuda"
   classes: [0]                  # Person only
   imgsz: 640
@@ -45,17 +45,17 @@ detection:
     gate: 60
     door: 50
   
-  # Tracking
+  # Tracking (OPTIMIZED FOR STABILITY)
   tracker: "bytetrack"
-  track_thresh: 0.5
-  match_thresh: 0.8
-  track_buffer: 30
+  track_thresh: 0.75              # INCREASED: 0.5 -> 0.75 (more confident tracks)
+  match_thresh: 0.85              # INCREASED: 0.8 -> 0.85 (better matching)
+  track_buffer: 60                # INCREASED: 30 -> 60 (longer persistence)
 
 # Face Recognition
 face:
   model: "buffalo_l"
-  # === FIX: Increased from 0.50 to 0.80 to accept your match score of 0.731 ===
-  threshold: 0.80
+  # OPTIMIZED: Lowered from 0.80 to 0.60 for better home camera recognition
+  threshold: 0.60
   database: "face_database.pkl"
   
   # Performance settings

@@ -160,11 +160,27 @@ class CrossCameraTracker:
         return None
     
     def is_matched(self, camera: str, track_id: int) -> bool:
-        """Check if track is matched with other camera"""
+        """Check if track is matched with other camera AND door track is still active"""
         if camera == 'gate':
-            return track_id in self.reverse_matches
+            # Check if matched AND door track is recent (within 10 seconds)
+            if track_id not in self.reverse_matches:
+                return False
+            
+            door_id = self.reverse_matches[track_id]
+            
+            # Check if door track exists and is recent
+            if door_id not in self.door_tracks:
+                return False
+            
+            door_track = self.door_tracks[door_id]
+            time_since_door = time.time() - door_track['last_seen']
+            
+            # Only count as matched if person is CURRENTLY at door (within 10 seconds)
+            return time_since_door < 10
+            
         elif camera == 'door':
             return track_id in self.matches
+        
         return False
     
     def cleanup_old_tracks(self):

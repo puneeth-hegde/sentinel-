@@ -79,10 +79,14 @@ class SentinelCoordinator:
         self.active_sessions = {}  # track_id -> PersonSession
         self.session_lock = threading.Lock()
         
-        # Frame skipping for performance
-        self.frame_skip = 2  # Process every 2nd frame
+        # Frame processing (OPTIMIZED: No skip for smooth display)
+        self.frame_skip = 1  # Process all frames
         self.gate_frame_count = 0
         self.door_frame_count = 0
+        
+        # CRITICAL: Initialize detection lists for disappearance check
+        self.gate_detections = []
+        self.door_detections = []
         
         # Initialize components
         self._init_components()
@@ -191,6 +195,12 @@ class SentinelCoordinator:
         """Process gate camera with optimizations"""
         frame = frame_data['frame']
         
+        # ALWAYS check disappearance (CRITICAL - even on skipped frames)
+        if hasattr(self, 'gate_detections') and self.gate_detections:
+            active_ids = set([d['track_id'] for d in self.gate_detections])
+            self.threat_analyzer.check_disappearance(active_ids)
+            self.threat_analyzer.check_group_threat(list(active_ids))
+        
         # Frame skipping for performance
         self.gate_frame_count += 1
         if self.gate_frame_count % self.frame_skip != 0:
@@ -238,11 +248,6 @@ class SentinelCoordinator:
                 pose_result=pose_result,
                 weapon_result=weapon_result
             )
-        
-        # Check for disappearances and group threats
-        active_ids = set([d['track_id'] for d in detections])
-        self.threat_analyzer.check_disappearance(active_ids)
-        self.threat_analyzer.check_group_threat(list(active_ids))
         
         self.gate_detections = detections
     
