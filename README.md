@@ -48,12 +48,12 @@
 
 ### 🌟 What Makes This Different?
 
-- **Context-Aware Decision Making**: Remembers who it has seen and makes intelligent decisions
-- **Multi-Signal Intelligence**: Combines face recognition, pose analysis, movement patterns, and temporal behavior
-- **76% Reduction in False Alarms**: Session-based tracking eliminates alert spam
-- **Complete Privacy**: All processing happens locally—zero cloud dependency
-- **Affordable**: Runs on consumer-grade hardware (gaming laptop with GTX 1650)
-- **Real-Time Performance**: Achieves 15-18 FPS while running 4 AI models simultaneously
+- **Context-Aware Decision Making**: Remembers who it has seen and makes intelligent decisions. 
+- **Multi-Signal Intelligence**: Combines face recognition, pose analysis, movement patterns, and temporal behavior. 
+- **76% Reduction in False Alarms**: Session-based tracking eliminates alert spam. 
+- **Complete Privacy**: All processing happens locally—zero cloud dependency. 
+- **Affordable**: Runs on consumer-grade hardware (gaming laptop with GTX 1650).
+- **Real-Time Performance**: Achieves 15-18 FPS while running 4 AI models simultaneously. 
 
 -----
 
